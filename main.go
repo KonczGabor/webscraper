@@ -27,6 +27,15 @@ func main() {
 		colly.AllowedDomains("www.scrapingcourse.com"),
 	)
 
+	c.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+	// set up the proxy
+	// https://free-proxy-list.net/
+	err := c.SetProxy("http://38.54.59.154:80")
+	if err != nil {
+		log.Fatal("asd", err)
+	}
+
 	c.OnHTML("li.product", func(e *colly.HTMLElement) {
 
 		// initialize a new Product instance
@@ -57,7 +66,7 @@ func main() {
 			// visit the next page
 			err := e.Request.Visit(nextPage)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Error during Next visit", err)
 			}
 		}
 	})
@@ -111,7 +120,7 @@ func main() {
 		defer writer.Flush()
 	})
 
-	err := c.Visit("https://www.scrapingcourse.com/ecommerce")
+	err = c.Visit("https://www.scrapingcourse.com/ecommerce")
 	if err != nil {
 		println("Error during Visit", err)
 	}
