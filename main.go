@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"sync"
 
 	// importing Colly
 	"github.com/gocolly/colly"
@@ -17,6 +18,9 @@ type Product struct {
 func main() {
 
 	var products []Product
+
+	// define a sync to filter visited URLs
+	var visitedUrls sync.Map
 
 	// instantiate a new collector object
 	c := colly.NewCollector(
@@ -39,6 +43,26 @@ func main() {
 
 	})
 
+	// OnHTML callback for handling pagination
+	c.OnHTML("a.next", func(e *colly.HTMLElement) {
+
+		// extract the next page URL from the next button
+		nextPage := e.Attr("href")
+
+		// check if the nextPage URL has been visited
+		if _, found := visitedUrls.Load(nextPage); !found {
+			fmt.Println("scraping:", nextPage)
+			// mark the URL as visited
+			visitedUrls.Store(nextPage, struct{}{})
+			// visit the next page
+			err := e.Request.Visit(nextPage)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	})
+
+	// store the data to a CSV after extraction
 	c.OnScraped(func(r *colly.Response) {
 
 		// open the CSV file
